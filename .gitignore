@@ -1,0 +1,64 @@
+# ---------- Environment ----------
+.env
+.env.*
+!.env.example
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+build/
+develop-eggs/
+eggs/
+sdist/
+wheels/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ---------- Django ----------
+*.log
+db.sqlite3
+db.sqlite3-journal
+/backend/media/
+/backend/staticfiles/
+local_settings.py
+
+# ---------- Testing / coverage ----------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+
+# ---------- Type checkers / linters ----------
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+
+# ---------- Node / Angular ----------
+node_modules/
+dist/
+tmp/
+out-tsc/
+.angular/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- Editors ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+desktop.ini
