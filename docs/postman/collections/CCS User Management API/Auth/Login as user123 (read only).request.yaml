@@ -1,0 +1,27 @@
+$kind: http-request
+description: Read-only account. Write requests return 403.
+url: "{{base_url}}/login/"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "username": "user123",
+      "password": "Password1!"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.collectionVariables.set('access_token', body.access);
+      pm.collectionVariables.set('refresh_token', body.refresh);
+      pm.collectionVariables.set('person_id', body.person_id);
+
+      pm.test('200 OK', () => pm.response.to.have.status(200));
+      pm.test('role is USER', () => pm.expect(body.role).to.eql('USER'));
+    language: text/javascript
+order: 2000

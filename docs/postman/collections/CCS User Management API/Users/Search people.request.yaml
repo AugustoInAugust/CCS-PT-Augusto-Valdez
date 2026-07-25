@@ -1,0 +1,7 @@
+$kind: http-request
+description: Searches first_name, last_name, email and country.
+url: "{{base_url}}/users/?search=Japan"
+method: GET
+queryParams:
+  search: Japan
+order: 3000

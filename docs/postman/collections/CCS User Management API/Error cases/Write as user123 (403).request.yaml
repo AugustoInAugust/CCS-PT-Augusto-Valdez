@@ -1,0 +1,18 @@
+$kind: http-request
+description: Run 'Login as user123' first so the stored token belongs to the read-only account.
+url: "{{base_url}}/users/"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "first_name": "Denied",
+      "last_name": "Test",
+      "email": "denied@example.com",
+      "phone": "+51 900 000 000",
+      "country": "Peru",
+      "birth_date": "1990-01-01"
+    }
+order: 7000

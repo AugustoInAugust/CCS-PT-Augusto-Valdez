@@ -1,0 +1,11 @@
+# Use this workspace to collaborate
+workspace:
+  id: 53cab898-9211-4e5c-8562-73c766824a9f
+
+localResources:
+  collections:
+    - ../CCS-API.postman_collection.json
+
+cloudResources:
+  collections:
+    ../postman/collections/CCS User Management API: dd89a7f7-5a2f-4931-8d85-bf097c75a983

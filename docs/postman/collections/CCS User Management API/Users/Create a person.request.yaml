@@ -1,0 +1,25 @@
+$kind: http-request
+description: Requires an admin token. Returns 403 for user123.
+url: "{{base_url}}/users/"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "first_name": "Nuevo",
+      "last_name": "Registro",
+      "email": "nuevo.registro@example.com",
+      "phone": "+51 999 111 222",
+      "country": "Peru",
+      "birth_date": "1999-02-10"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      if (pm.response.code === 201) {
+          pm.collectionVariables.set('created_id', pm.response.json().id);
+      }
+    language: text/javascript
+order: 6000

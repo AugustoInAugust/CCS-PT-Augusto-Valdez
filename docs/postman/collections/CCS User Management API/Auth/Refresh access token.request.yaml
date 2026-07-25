@@ -1,0 +1,22 @@
+$kind: http-request
+description: Rotates the refresh token. The previous one is blacklisted, so replaying it returns 401.
+url: "{{base_url}}/token/refresh/"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "refresh": "{{refresh_token}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.collectionVariables.set('access_token', body.access);
+      if (body.refresh) { pm.collectionVariables.set('refresh_token', body.refresh); }
+    language: text/javascript
+order: 4000

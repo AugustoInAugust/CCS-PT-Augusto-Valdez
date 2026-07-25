@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/users/"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "first_name": "Solo"
+    }
+order: 6000

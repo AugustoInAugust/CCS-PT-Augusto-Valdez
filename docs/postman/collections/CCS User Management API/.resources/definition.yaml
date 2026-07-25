@@ -1,0 +1,17 @@
+$kind: collection
+name: CCS User Management API
+description: |-
+  REST API for the CCS PT. Run `docker compose up -d` and `python manage.py runserver` before using this collection.
+
+  Start with **Auth > Login as admin**: it stores the tokens in collection variables automatically, so every other request is already authenticated.
+variables:
+  base_url: http://localhost:8000/api/v1
+  access_token: ""
+  refresh_token: ""
+  person_id: ""
+auth:
+  - id: 70027c5c-9208-41d4-aa54-f95d2d3d01d1
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{access_token}}"

@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/users/"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "first_name": "Test",
+      "last_name": "Invalid",
+      "email": "not-an-email",
+      "phone": "+51 900 000 000",
+      "country": "Peru",
+      "birth_date": "1990-01-01"
+    }
+order: 4000

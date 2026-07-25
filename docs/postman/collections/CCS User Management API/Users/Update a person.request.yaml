@@ -1,0 +1,18 @@
+$kind: http-request
+description: PUT replaces the whole record, so every field is required.
+url: "{{base_url}}/users/{{created_id}}/"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "first_name": "Actualizado",
+      "last_name": "Registro",
+      "email": "nuevo.registro@example.com",
+      "phone": "+51 999 111 222",
+      "country": "Chile",
+      "birth_date": "1999-02-10"
+    }
+order: 7000

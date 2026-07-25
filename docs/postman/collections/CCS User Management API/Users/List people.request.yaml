@@ -1,0 +1,5 @@
+$kind: http-request
+description: Paginated, 10 per page.
+url: "{{base_url}}/users/"
+method: GET
+order: 1000

@@ -1,0 +1,15 @@
+$kind: http-request
+description: Blacklists the refresh token immediately.
+url: "{{base_url}}/logout/"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "refresh": "{{refresh_token}}"
+    }
+auth:
+  type: noauth
+order: 5000

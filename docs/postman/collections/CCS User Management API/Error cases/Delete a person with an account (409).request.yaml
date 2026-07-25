@@ -1,0 +1,5 @@
+$kind: http-request
+description: Person 21 owns the admin account, so PROTECT blocks the delete.
+url: "{{base_url}}/users/21/"
+method: DELETE
+order: 8000

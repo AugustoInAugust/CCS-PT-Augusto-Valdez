@@ -1,0 +1,6 @@
+$kind: http-request
+url: "{{base_url}}/users/?ordering=-country"
+method: GET
+queryParams:
+  ordering: -country
+order: 4000

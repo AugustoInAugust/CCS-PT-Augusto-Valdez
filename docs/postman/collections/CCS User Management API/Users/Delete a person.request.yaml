@@ -1,0 +1,5 @@
+$kind: http-request
+description: Returns 204 with no body.
+url: "{{base_url}}/users/{{created_id}}/"
+method: DELETE
+order: 8000
