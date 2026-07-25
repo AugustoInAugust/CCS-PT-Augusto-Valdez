@@ -122,6 +122,7 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'config.exceptions.api_exception_handler',
 }
 
 SIMPLE_JWT = {
