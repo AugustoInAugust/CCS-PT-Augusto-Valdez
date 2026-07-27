@@ -19,6 +19,7 @@ Submitted by **Augusto Valdez** for the CCS Developer Challenge.
 - [Roles and permissions](#roles-and-permissions)
 - [Error format](#error-format)
 - [API documentation](#api-documentation)
+- [Running the tests](#running-the-tests)
 - [Project structure](#project-structure)
 - [Assumptions and design decisions](#assumptions-and-design-decisions)
 - [Optional features implemented](#optional-features-implemented)
@@ -141,6 +142,8 @@ pip install -r requirements.txt
 ```
 
 Confirm the environment is active before installing — the shell prompt should show `(.venv)`.
+
+To run the test suite as well, install `requirements-dev.txt` instead: it includes everything above plus `pytest`.
 
 ### 5. Apply migrations
 
@@ -468,6 +471,42 @@ Run **Auth → Login as admin** first: a post-response script stores the tokens 
 
 ---
 
+## Running the tests
+
+The backend suite uses `pytest` and `pytest-django`. Install the development dependencies, which include the runtime ones:
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+```
+
+PostgreSQL must be running: Django creates a separate `test_ccs_db` database, applies the migrations to it, runs the suite and drops it. The development database is never touched.
+
+```bash
+pytest                                    # whole suite
+pytest users                              # one app
+pytest users/tests/test_services.py       # one file
+pytest -v                                 # one line per test
+```
+
+### What is covered
+
+41 tests across four areas:
+
+| File | Focus |
+| --- | --- |
+| `accounts/tests/test_login.py` | Token issuing, identical message for both invalid-credential cases, refresh rotation, blacklisting on logout |
+| `users/tests/test_permissions.py` | `401` when anonymous, `403` when a reader attempts a write, success for administrators |
+| `users/tests/test_validation.py` | Required fields, email format, duplicate email, future birth date, error envelope shape |
+| `users/tests/test_api.py` | Pagination, search, ordering, retrieve, `404`, create, update, delete, and the `409` on a linked person |
+| `users/tests/test_services.py` | Business rules called directly, with no HTTP request involved |
+
+`test_services.py` is the one that justifies the service layer: `delete_person()` is asserted to raise `PersonHasAccount` by calling the function itself — no client, no authentication, no server. Business rules are testable because they do not depend on the framework.
+
+Because the sample data ships as a migration, the test database is created already populated, so the fixed `admin` and `user123` accounts are available to every test.
+
+---
+
 ## Project structure
 
 ```
@@ -478,7 +517,10 @@ CCS-PT-Augusto-Valdez/
 │   └── CCS-API.postman_collection.json
 ├── backend/
 │   ├── manage.py
+│   ├── pytest.ini
+│   ├── conftest.py               Shared test fixtures
 │   ├── requirements.txt
+│   ├── requirements-dev.txt
 │   ├── config/
 │   │   ├── settings.py           Configuration, read from .env
 │   │   ├── urls.py               Root router, mounts /api/v1/ and Swagger
@@ -627,7 +669,7 @@ Because the backend rotates and blacklists refresh tokens, concurrent refreshes 
 | 1 | Pagination | Implemented | 10 per page, with `count`, `next` and `previous`; paged controls on the list screen |
 | 2 | Search and filtering | Implemented | `?search=` across four fields plus `?ordering=`; debounced search box on the list screen |
 | 3 | Docker | Implemented | Compose service for PostgreSQL, with health check and named volume |
-| 4 | Unit tests | Pending | |
+| 4 | Unit tests | Implemented | 41 backend tests with pytest; see [Running the tests](#running-the-tests) |
 | 5 | Swagger / OpenAPI | Implemented | `drf-spectacular`, served at `/api/docs/` |
 | 6 | Refresh tokens | Implemented | With rotation and blacklisting, a logout endpoint, and transparent renewal in the client |
 | 7 | Role-based authorization | Implemented | `ADMIN` writes, `USER` reads, enforced server side |
