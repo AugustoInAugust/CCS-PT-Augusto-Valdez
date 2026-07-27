@@ -100,11 +100,13 @@ cp .env.example .env          # Linux / macOS
 copy .env.example .env        # Windows
 ```
 
-Then open `.env` and set a real `DJANGO_SECRET_KEY` and `POSTGRES_PASSWORD`. Generate a key with:
+Then open `.env` and replace the two `change-me` placeholders with real values. This prints both, ready to paste:
 
 ```bash
-python -c "import secrets; print(secrets.token_urlsafe(50))"
+python -c "import secrets; print('DJANGO_SECRET_KEY=' + secrets.token_urlsafe(50)); print('POSTGRES_PASSWORD=' + secrets.token_urlsafe(16))"
 ```
+
+They are two independent secrets and must never share the same value: the database password and Django's signing key protect different things.
 
 The `.env` file is git-ignored. `.env.example` documents every variable the project reads.
 
