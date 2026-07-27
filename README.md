@@ -697,6 +697,25 @@ The specification also lists five frontend features as optional and not evaluate
 
 ## Troubleshooting
 
+### Windows: "running scripts is disabled on this system"
+
+PowerShell blocks `.ps1` scripts by default, which prevents `Activate.ps1` from running. Allow it for the current terminal only:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+The setting is discarded when the terminal closes. To allow local scripts permanently for your user, use `-Scope CurrentUser -ExecutionPolicy RemoteSigned` instead.
+
+Alternatively, skip activation entirely and call the interpreter by its full path, which runs no script at all:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe manage.py migrate
+```
+
+Note the activation path is `.\.venv\` — a dot, a backslash, then `.venv`. Omitting the backslash resolves to a non-existent `backend.venv` folder.
+
 ### `docker compose up` fails with "port is already allocated"
 
 Another service is using the port. Either stop it, or change `POSTGRES_PORT` in `.env` to a free port — Django reads the same variable, so both sides stay in sync.
