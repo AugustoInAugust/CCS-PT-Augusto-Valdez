@@ -2,7 +2,7 @@
 
 REST API for managing user records, built with Django REST Framework and PostgreSQL, plus a lightweight Angular client that consumes it.
 
-Submitted by **Augusto Valdez** for the CCS Developer Challenge.
+Submitted by **Augusto Valdez** for the CCS PT.
 
 ---
 
