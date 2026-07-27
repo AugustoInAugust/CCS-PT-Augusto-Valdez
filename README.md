@@ -44,6 +44,8 @@ Two concepts are modelled separately:
 
 The reasoning behind that split is documented under [Assumptions and design decisions](#assumptions-and-design-decisions).
 
+The Angular client covers the three required screens — sign in, people list and user details — and consumes the API exclusively. It renews expired tokens transparently and adapts its controls to the signed-in user's role.
+
 ---
 
 ## Tech stack
@@ -56,7 +58,8 @@ The reasoning behind that split is documented under [Assumptions and design deci
 | Database | PostgreSQL 16 |
 | API documentation | OpenAPI 3 via `drf-spectacular` (Swagger UI) |
 | Containers | Docker Compose (PostgreSQL) |
-| Frontend | Angular (standalone components, reactive forms) |
+| Frontend | Angular 22 (standalone components, signals, reactive forms) |
+| Styling | Tailwind CSS 4 |
 
 ---
 
@@ -64,7 +67,7 @@ The reasoning behind that split is documented under [Assumptions and design deci
 
 - **Python 3.12 or newer** (developed and tested on 3.14.6)
 - **Docker Desktop** with Docker Compose v2
-- **Node.js 20+** and npm, for the frontend
+- **Node.js 20 or newer** and npm, for the frontend (developed on Node 24.18)
 - **Git**
 
 Verify:
@@ -73,7 +76,10 @@ Verify:
 python --version
 docker compose version
 node --version
+npm --version
 ```
+
+The Angular CLI does not need to be installed globally: the frontend scripts run it from the project's own dependencies.
 
 ---
 
@@ -203,17 +209,63 @@ python manage.py migrate
 
 ## Frontend setup
 
-> **Status: not yet implemented.** This section describes the intended setup and will be verified once the client is built.
+The client is an Angular 22 application using standalone components, signals and Tailwind CSS.
+
+### 1. Install dependencies
 
 ```bash
 cd frontend
 npm install
-ng serve
 ```
 
-The application will run at `http://localhost:4200`, which is already whitelisted in `CORS_ALLOWED_ORIGINS`.
+### 2. Run the development server
 
-The backend must be running for the frontend to work. The client consumes the REST API exclusively — it performs no direct database access.
+```bash
+npm start
+```
+
+The application runs at `http://localhost:4200`, which is already whitelisted in `CORS_ALLOWED_ORIGINS`.
+
+**The backend must be running.** The client consumes the REST API exclusively and performs no direct database access. Start PostgreSQL and the Django server first, as described in [Backend setup](#backend-setup).
+
+The API base URL lives in `frontend/src/environments/environment.ts`:
+
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8000/api/v1',
+};
+```
+
+### Production build
+
+```bash
+npm run build
+```
+
+Output is written to `frontend/dist/frontend`.
+
+### Screens
+
+| Route | Screen | Access |
+| --- | --- | --- |
+| `/login` | Sign in | Public |
+| `/people` | People list, with search and pagination | Any authenticated user |
+| `/people/:id` | User details, editable by administrators | Any authenticated user |
+
+Unauthenticated visits to a protected route are redirected to `/login` with the original URL preserved, so signing in returns the user to where they were heading.
+
+### Minimum requirements coverage
+
+The challenge asks for five Angular concepts. Where each one is demonstrated:
+
+| Concept | Location |
+| --- | --- |
+| Standalone components | Every component; the project has no `NgModule` |
+| Services | `AuthService` and `UserService`, injected with `inject()` |
+| HttpClient | Both services, with typed request and response models |
+| Routing | `app.routes.ts`, with a route guard and lazily loaded screens |
+| Reactive forms | Login form and the user details form, with validators |
 
 ---
 
@@ -447,10 +499,31 @@ CCS-PT-Augusto-Valdez/
 │       ├── urls.py               Login, refresh, logout
 │       ├── permissions.py        IsAdminOrReadOnly
 │       └── migrations/           Schema + seed
-└── frontend/                     Angular client
+└── frontend/
+    └── src/
+        ├── environments/
+        │   └── environment.ts    API base URL
+        └── app/
+            ├── app.routes.ts     Routes, guard and lazy loading
+            ├── app.config.ts     HttpClient, interceptor, router
+            ├── app.component.*   Shell: session bar and router outlet
+            ├── core/
+            │   ├── models/       Person, Session, Page<T>, ApiErrorBody
+            │   ├── services/     AuthService, UserService
+            │   ├── interceptors/ Bearer token and 401 refresh
+            │   ├── guards/       authGuard
+            │   ├── storage/      Session persistence
+            │   └── errors/       API error to display text
+            ├── components/
+            │   ├── login/
+            │   └── people/
+            │       ├── people-list/
+            │       └── user-details/
+            └── shared/
+                └── confirm-dialog/
 ```
 
-Responsibilities are separated as follows:
+Backend responsibilities are separated as follows:
 
 | Layer | Responsibility |
 | --- | --- |
@@ -462,6 +535,8 @@ Responsibilities are separated as follows:
 | **URLs** | Routing |
 
 Views contain no business logic. Every write operation delegates to a service function that is callable without an HTTP request, which keeps the domain testable and reusable from management commands or background jobs.
+
+On the frontend, `core/` holds everything application-wide and injectable, `components/` holds the routed screens, and `shared/` holds presentational components that carry no knowledge of the domain.
 
 ---
 
@@ -523,21 +598,56 @@ No `/users/me` endpoint was added. The client stores `person_id` from the login 
 
 Field names match the database and the specification exactly (`first_name`, not `firstName`), which avoids a translation layer on either side.
 
+### 12. The frontend implements exactly the three required screens
+
+Section 3.1 of the specification lists Login, People List and User Details as the required screens, and section 3.3 lists view, edit and delete as the required actions. No "create person" screen was built, even though `POST /api/v1/users/` exists and is documented, because it was not requested. Adding it would mean one extra route reusing the existing form.
+
+### 13. The session is stored in `localStorage`
+
+JWTs are stateless, so the client is the only place the token lives. Keeping it in memory alone would sign the user out on every page reload, so it is persisted in `localStorage` and restored when the application boots.
+
+The trade-off is that `localStorage` is readable by any JavaScript running on the page, which makes it vulnerable to XSS. The more defensive alternative is an `httpOnly` cookie, which JavaScript cannot read, at the cost of CSRF handling and cross-origin cookie configuration. `localStorage` is the common choice for single-page applications and is mitigated here by short-lived access tokens (30 minutes) and refresh token rotation with blacklisting. A system handling genuinely sensitive data should use `httpOnly` cookies instead.
+
+### 14. Authorization is enforced on the server, mirrored on the client
+
+The client hides the delete and save controls for non-administrators and disables the details form. This is presentation only: `IsAdminOrReadOnly` still rejects the request with `403` if it is issued directly. The two layers are deliberately independent, and the client is never treated as a security boundary.
+
+### 15. Expired access tokens are refreshed transparently
+
+An HTTP interceptor attaches the bearer token to every request and, on a `401`, exchanges the refresh token for a new access token and replays the original request. The component that made the call never observes the failure.
+
+Because the backend rotates and blacklists refresh tokens, concurrent refreshes would invalidate each other. `AuthService.refresh()` therefore shares a single in-flight request between all callers.
+
 ---
 
 ## Optional features implemented
 
 | # | Feature | Status | Notes |
 | --- | --- | --- | --- |
-| 1 | Pagination | Implemented | 10 per page, with `count`, `next` and `previous` |
-| 2 | Search and filtering | Implemented | `?search=` across four fields, plus `?ordering=` |
+| 1 | Pagination | Implemented | 10 per page, with `count`, `next` and `previous`; paged controls on the list screen |
+| 2 | Search and filtering | Implemented | `?search=` across four fields plus `?ordering=`; debounced search box on the list screen |
 | 3 | Docker | Implemented | Compose service for PostgreSQL, with health check and named volume |
 | 4 | Unit tests | Pending | |
 | 5 | Swagger / OpenAPI | Implemented | `drf-spectacular`, served at `/api/docs/` |
-| 6 | Refresh tokens | Implemented | With rotation and blacklisting, plus a logout endpoint |
-| 7 | Role-based authorization | Implemented | `ADMIN` writes, `USER` reads |
+| 6 | Refresh tokens | Implemented | With rotation and blacklisting, a logout endpoint, and transparent renewal in the client |
+| 7 | Role-based authorization | Implemented | `ADMIN` writes, `USER` reads, enforced server side |
 | 8 | Logging | Implemented | Structured console logging; failed logins, blocked deletes and every write are recorded |
 | 9 | Environment configuration | Implemented | All settings read from `.env`, with a documented `.env.example` |
+
+The specification also lists five frontend features as optional and not evaluated. Three were used because they reduce code rather than add it:
+
+| Feature | Used | Reason |
+| --- | --- | --- |
+| Angular Signals | Yes | The default idiom in Angular 22; component and session state are signals |
+| HTTP Interceptors | Yes | Centralises token attachment and `401` refresh instead of repeating them per call |
+| Tailwind CSS | Yes | Configured by the Angular CLI; keeps the styling effort proportionate |
+| Angular Material | No | A heavy, opinionated dependency that Tailwind already covers here |
+| State management library | No | Disproportionate for three screens; two services with signals are enough |
+
+### Known limitations
+
+- The page size (10) is defined in both `settings.py` and the list component. Changing it on the backend requires the same change on the client.
+- The confirmation dialog does not trap keyboard focus. Doing so properly would require `@angular/cdk`.
 
 ---
 
