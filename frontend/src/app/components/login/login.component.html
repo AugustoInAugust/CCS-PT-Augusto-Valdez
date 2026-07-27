@@ -1,0 +1,50 @@
+<div class="min-h-screen flex items-center justify-center bg-slate-100 px-4">
+  <div class="w-full max-w-sm bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+    <h1 class="text-2xl font-semibold text-slate-900">Sign in</h1>
+    <p class="mt-1 text-sm text-slate-500">User Management</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="mt-6 space-y-4">
+      <div>
+        <label for="username" class="block text-sm font-medium text-slate-700">Username</label>
+        <input
+          id="username"
+          type="text"
+          formControlName="username"
+          autocomplete="username"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-900 focus:outline-none"
+        />
+        @if (invalid('username')) {
+          <p class="mt-1 text-sm text-red-600">Username is required.</p>
+        }
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-slate-700">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-900 focus:outline-none"
+        />
+        @if (invalid('password')) {
+          <p class="mt-1 text-sm text-red-600">Password is required.</p>
+        }
+      </div>
+
+      @if (errorText()) {
+        <p class="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+          {{ errorText() }}
+        </p>
+      }
+
+      <button
+        type="submit"
+        [disabled]="submitting()"
+        class="w-full rounded-lg bg-slate-900 px-4 py-2 text-white font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {{ submitting() ? 'Signing in...' : 'Sign in' }}
+      </button>
+    </form>
+  </div>
+</div>

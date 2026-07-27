@@ -1,0 +1,102 @@
+<div class="mx-auto max-w-6xl px-4 py-8">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold text-slate-900">People</h1>
+      <p class="mt-1 text-sm text-slate-500">{{ total() }} users</p>
+    </div>
+
+    <input
+      type="search"
+      [formControl]="search"
+      placeholder="Search by name, email or country"
+      class="w-full sm:w-80 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-900 focus:outline-none"
+    />
+  </div>
+
+  @if (errorText()) {
+    <p class="mt-4 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+      {{ errorText() }}
+    </p>
+  }
+
+  <div class="mt-6 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-slate-50 text-slate-600">
+        <tr>
+          <th class="px-4 py-3 font-medium">Full name</th>
+          <th class="px-4 py-3 font-medium">Email</th>
+          <th class="px-4 py-3 font-medium">Country</th>
+          <th class="px-4 py-3 font-medium">Phone</th>
+          <th class="px-4 py-3 font-medium text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        @for (person of people(); track person.id) {
+          <tr class="hover:bg-slate-50">
+            <td class="px-4 py-3 text-slate-900">{{ person.full_name }}</td>
+            <td class="px-4 py-3 text-slate-600">{{ person.email }}</td>
+            <td class="px-4 py-3 text-slate-600">{{ person.country }}</td>
+            <td class="px-4 py-3 text-slate-600">{{ person.phone }}</td>
+            <td class="px-4 py-3">
+              <div class="flex justify-end gap-3">
+                <a
+                  [routerLink]="['/people', person.id]"
+                  class="text-slate-700 hover:text-slate-900 hover:underline"
+                >
+                  {{ isAdmin() ? 'View / Edit' : 'View' }}
+                </a>
+                @if (isAdmin()) {
+                  <button type="button" (click)="askToDelete(person)" class="text-red-600 hover:underline">
+                    Delete
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="px-4 py-10 text-center text-slate-500">
+              {{ loading() ? 'Loading...' : 'No people found.' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (totalPages() > 1) {
+    <div class="mt-4 flex items-center justify-between">
+      <button
+        type="button"
+        (click)="goToPage(page() - 1)"
+        [disabled]="page() === 1 || loading()"
+        class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Previous
+      </button>
+
+      <span class="text-sm text-slate-600">Page {{ page() }} of {{ totalPages() }}</span>
+
+      <button
+        type="button"
+        (click)="goToPage(page() + 1)"
+        [disabled]="page() === totalPages() || loading()"
+        class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Next
+      </button>
+    </div>
+  }
+
+  @if (pendingDelete(); as person) {
+    <app-confirm-dialog
+      title="Delete person"
+      [message]="'Delete ' + person.full_name + '? This action cannot be undone.'"
+      confirmLabel="Delete"
+      [busy]="deleting()"
+      [danger]="true"
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+</div>
